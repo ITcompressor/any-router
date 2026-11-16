@@ -108,3 +108,7 @@ Build metadata (`version`, `GET /api/version`, the admin topbar) is injected via
 
 Agent instructions — [AGENTS.md](AGENTS.md) (in Russian). Detailed design docs and
 PlantUML diagrams live in the private project monorepo.
+
+## License
+
+Released under the [MIT License](LICENSE).
