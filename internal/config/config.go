@@ -32,7 +32,8 @@ const DefaultFile = "any-router.yaml"
 
 // DefaultBaseURL — адрес, который подставляется в «Примеры вызова» админки,
 // если -base-url/env не заданы (локальный сервер на дефолтном порту 8085;
-// прод-домен any-router.e7.by пробрасывается явно при локальном запуске).
+// прод-API llm.e7.by пробрасывается явно при локальном запуске — промо
+// any-router.e7.by раздаёт только статику, без API-пробросов).
 const DefaultBaseURL = "http://localhost:8085"
 
 // Default — настройки по умолчанию: INFO, any-router.yaml в cwd;
