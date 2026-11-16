@@ -78,6 +78,10 @@ go test ./...
 вкачиваются через `-ldflags`: `-X github.com/ITcompressor/any-router/internal/version.Commit=<sha>`
 и `-X github.com/ITcompressor/any-router/internal/version.BuildTime=<время>`.
 
+**Релизы**: пуш тега `v*` — GitHub Actions сам гоняет тесты, собирает четыре
+бинаря с контрольными суммами и публикует Release
+([Releases](https://github.com/ITcompressor/any-router/releases)).
+
 ## Конфигурация
 
 - Файл: `any-router.yaml` в рабочей директории (создаётся при первом запуске, права 0600).

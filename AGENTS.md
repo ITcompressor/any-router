@@ -45,10 +45,22 @@ GOOS=linux GOARCH=amd64 go build -o any-router-linux-amd64 ./cmd/any-router   # 
 ./any-router serve                             # HTTP-сервер: API /v1 и веб-админка /admin
 ./any-router models                            # список моделей провайдеров (ходит в бэкенды напрямую)
 ./any-router version                           # версия + commit/время сборки
+git tag -a vX.Y.Z -m "vX.Y.Z" && git push origin vX.Y.Z   # релиз: Actions тесты → сборка → Release
 ```
 
 Бинари `any-router`, `any-router-linux-amd64` и конфиг `any-router.yaml`
 в git не попадают (см. `.gitignore`).
+
+## Релизы
+
+Пуш тега `v*` (`git tag -a vX.Y.Z && git push origin vX.Y.Z`) → workflow
+`.github/workflows/release.yml`: тесты → бинари 4 платформ (linux/darwin ×
+amd64/arm64) + SHA256SUMS → GitHub Release с auto-notes (без секретов,
+`contents: write`). Версия инжектируется из имени тега (-ldflags `Version`),
+Commit/BuildTime — из окружения раннера: релизные бинари всегда репортят свой
+тег. Константа `Version` в `internal/version` — фолбэк dev-сборок (лендинг,
+прод): при подготовке релиза её поднимать и коммитить ДО тега. Тег ставить на
+коммит, где workflow уже есть.
 
 ## Конфиг
 

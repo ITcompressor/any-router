@@ -79,6 +79,10 @@ Build metadata (`version`, `GET /api/version`, the admin topbar) is injected via
 `-ldflags`: `-X github.com/ITcompressor/any-router/internal/version.Commit=<sha>` and
 `-X github.com/ITcompressor/any-router/internal/version.BuildTime=<time>`.
 
+**Releases**: push a `v*` tag — GitHub Actions runs the tests, builds the four
+binaries with checksums and publishes a Release automatically
+([Releases](https://github.com/ITcompressor/any-router/releases)).
+
 ## Configuration
 
 - File: `any-router.yaml` in the working directory (created on first start, mode 0600).

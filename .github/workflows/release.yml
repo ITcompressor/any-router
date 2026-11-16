@@ -1,0 +1,52 @@
+# Релиз any-router: пуш тега vX.Y.Z → тесты → бинари 4 платформ (linux/darwin ×
+# amd64/arm64) + SHA256SUMS → GitHub Release (auto-notes по коммитам).
+# Версия вкачивается из имени тега через -ldflags — релизные бинари всегда
+# репортят свой тег, даже если константа Version в internal/version отстала
+# (константа — фолбэк для dev-сборок; при подготовке релиза её лучше поднимать).
+# Условие: тег ставить на коммит, в котором workflow уже есть (тогда тег — этот
+# коммит или позже).
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Test
+        run: go test ./...
+
+      - name: Build (linux/darwin × amd64/arm64) + SHA256SUMS
+        run: |
+          mkdir -p dist
+          for os in linux darwin; do
+            for arch in amd64 arm64; do
+              GOOS="$os" GOARCH="$arch" CGO_ENABLED=0 \
+                go build -trimpath -ldflags "-s -w \
+                  -X github.com/ITcompressor/any-router/internal/version.Version=${GITHUB_REF_NAME} \
+                  -X github.com/ITcompressor/any-router/internal/version.Commit=${GITHUB_SHA::7} \
+                  -X github.com/ITcompressor/any-router/internal/version.BuildTime=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                -o "dist/any-router-$os-$arch" ./cmd/any-router
+            done
+          done
+          (cd dist && sha256sum any-router-* > SHA256SUMS)
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --latest
