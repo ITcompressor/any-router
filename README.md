@@ -6,7 +6,7 @@
 
 Also available in Russian: [README.ru.md](README.ru.md)
 
-**Product overview — https://any-router.e7.by/**
+**Product overview — https://any-router.e7.by/en/**
 
 ## Features
 
