@@ -1,72 +1,73 @@
 # any-router
 
-Маршрутизатор-прокси LLM-запросов: одна точка входа `/v1/*` с роутингом по имени
-модели `provider/model` к разным провайдерам (OpenAI-совместимые API), веб-админка
-`/admin`, CLI. Один бинарь, только стандартная библиотека Go + `gopkg.in/yaml.v3`.
+> A single-binary Go proxy for LLM requests: one `/v1/*` endpoint that routes by model
+> name (`provider/model`) across multiple OpenAI-compatible providers — plus a web
+> admin UI, scoped API tokens, and a CLI.
 
-EN: a single-binary Go proxy that routes OpenAI-compatible `/v1` requests by model
-name (`provider/model`) to multiple backends, with a web admin UI and CLI.
+Also available in Russian: [README.ru.md](README.ru.md)
 
-**Продуктовый обзор — лендинг https://any-router.e7.by/**
+**Product overview — https://any-router.e7.by/**
 
-## Возможности
+## Features
 
-- Роутинг `/v1/*` по модели: `openai/gpt-4o-mini`, `ollama/llama3`, … — имя
-  модели переписывается под бэкенд, стриминг SSE насквозь.
-- Баланс-алиасы: групповые имена без префикса провайдера (`chat`, `fast`) —
-  round-robin по участникам с фейловером; липкость бесед для эмбеддингов.
-- API-токены с областью (scope `models`): каждому токену — свой список
-  моделей/хостов/алиасов; админ-токен отдельный.
-- Веб-админка `/admin` (i18n ru/en): провайдеры, токены, балансировка, Langfuse,
-  готовые curl-примеры по capabilities модели; правки сохраняются в YAML атомарно.
-- Неблокирующий экспорт трейсов в Langfuse (OTLP/JSON).
-- Агрегация `/v1/models` с фоновым обновлением кэша.
+- **Routing by model name**: `openai/gpt-4o-mini`, `local/llama3`, … — one OpenAI-compatible
+  entry point; the model name is rewritten per backend, SSE streaming is passed through.
+- **Balance aliases**: grouped bare names without a provider prefix (`chat`, `fast`) —
+  round-robin across members with failover; conversation stickiness by session header
+  or the first two messages.
+- **Scoped API tokens** (`scope: models`): each token gets its own list of concrete
+  models (`provider/model`), whole hosts (`provider/*`) and aliases; the admin token is separate. Fail closed.
+- **Web admin UI** `/admin` (ru/en): providers, tokens, balancing, Langfuse, ready-made
+  curl examples matched to each model's capabilities; edits are saved to YAML atomically (tmp + rename).
+- **Non-blocking Langfuse export**: OTLP/JSON traces via an in-memory queue.
+- **Aggregated `/v1/models`** with background cache refresh.
+- Single Go binary, standard library + `gopkg.in/yaml.v3` only.
 
-## Быстрый старт
+## Quick start
 
 ```bash
 go install github.com/ITcompressor/any-router/cmd/any-router@latest
-# или локальная сборка:
+# or build locally:
 go build -o any-router ./cmd/any-router
 
-./any-router serve          # :8085 из any-router.yaml (создаётся при первом запуске, 0600)
-# админка: http://localhost:8085/admin  (админ-токен печатается при старте)
+./any-router serve          # :8085 from any-router.yaml (autocreated on first start, mode 0600)
+# admin UI: http://localhost:8085/admin   (the admin token is printed at startup)
 ```
 
-Минимальный `any-router.yaml` (создаётся автоматически; правится руками или в админке):
+Minimal `any-router.yaml` (autocreated; edit by hand or in the admin UI):
 
 ```yaml
 listen: ":8085"
-token: "<админ-токен>"
-lang: ru
+token: "<admin-token>"
+lang: en
 providers:
   local:
-    baseurl: http://localhost:11434/v1     # Ollama / openai-совместимый
+    baseurl: http://localhost:11434/v1     # Ollama / any OpenAI-compatible API
     apikey: ""
 tokens:
   - id: demo
-    token: "<api-токен>"
+    token: "<api-token>"
     scope: models
     models: ["local/qwen3"]
 ```
 
-⚠️ Конфиг содержит токены в открытом виде — файл не коммитится в git
-(в `.gitignore`), права 0600.
+⚠️ The config holds tokens in plain text — the file must not be committed to git
+(it is in `.gitignore`); keep its mode at `0600`.
 
 ## CLI
 
-| Команда | Что делает |
+| Command | What it does |
 |--|--|
-| `serve` (по умолчанию) | HTTP-сервер: API `/v1` + веб-админка `/admin` |
-| `models` | список моделей провайдеров (ходит в бэкенды напрямую) |
-| `version` | версия + commit/время сборки |
-| `help` | справка |
+| `serve` (default) | HTTP server: `/v1` API + web admin `/admin` |
+| `models` | list of provider models (queries the backends directly) |
+| `version` | version + commit/build-time |
+| `help` | help |
 
-Оверрайды запуска: `-config`, `-addr`, `-port`, `-token`, `-base-url`,
-`-log-level`; env — `ANY_ROUTER_ADDR|PORT|TOKEN|BASE_URL|CONFIG|LOG_LEVEL`
-(флаги > env > дефолты).
+Start overrides: `-config`, `-addr`, `-port`, `-token`, `-base-url`, `-log-level`;
+env — `ANY_ROUTER_ADDR|PORT|TOKEN|BASE_URL|CONFIG|LOG_LEVEL`
+(flags > env > defaults).
 
-## Сборка
+## Build
 
 ```bash
 go build -o any-router ./cmd/any-router
@@ -74,12 +75,36 @@ GOOS=linux GOARCH=amd64 go build -o any-router-linux-amd64 ./cmd/any-router
 go test ./...
 ```
 
-Метаданные сборки (`version`, `GET /api/version`, топбар админки)
-вкачиваются через `-ldflags`: `-X github.com/ITcompressor/any-router/internal/version.Commit=<sha>`
-и `Internal/version.BuildTime=<время>`.
+Build metadata (`version`, `GET /api/version`, the admin topbar) is injected via
+`-ldflags`: `-X github.com/ITcompressor/any-router/internal/version.Commit=<sha>` and
+`-X github.com/ITcompressor/any-router/internal/version.BuildTime=<time>`.
 
-## Документация
+## Configuration
 
-Подробные разделы (устройство, YAML-конфиг, деплой, админка) и PlantUML-схемы —
-в монорепе проекта: `docs/any-router/` в [project-phoenix](https://git.e7.by/second_constantine/project-phoenix).
-Инструкции для агентов — [AGENTS.md](AGENTS.md).
+- File: `any-router.yaml` in the working directory (created on first start, mode 0600).
+  What it holds: `listen`, `token` (admin), `lang` (`ru|en`), `providers`
+  (map: `baseurl`, `apikey`), `tokens` (API tokens: `id`/`token`/`scope` — the
+  `models` scope is a list of concrete models `provider/model`, whole hosts
+  `provider/*` and balance aliases (bare names); legacy scopes `all`/`provider`/`model`
+  are still accepted, and the ✎ button in the admin shows the equivalent and rewrites
+  them to `models`), `balances` (alias groups — bare names without a provider prefix,
+  `[{name, models: [provider/model, …]}]`: a bare-name request is served by round-robin
+  over the members with failover; a scoped token may call an alias when the bare name
+  falls within its `models` scope or when its scope covers all members), `langfuse`
+  (`enabled` — toggle the export without dropping the settings, `url`, keys,
+  `environment`, `tags`).
+- Admin-UI edits are saved to the YAML atomically (tmp + rename).
+- Overrides (flags > env > defaults): `-config`, `-addr`, `-port`, `-token`,
+  `-base-url`, `-log-level`; env — `ANY_ROUTER_ADDR|PORT|TOKEN|BASE_URL|CONFIG|LOG_LEVEL`.
+
+## Security
+
+- The `any-router.yaml` config holds tokens in plain text and must not be committed
+  (it is in `.gitignore`); the server never logs tokens or keys into responses or
+  error messages.
+- Auth for `/v1` and `/admin` is Bearer-only (admin or API token) and fails closed.
+
+## Documentation
+
+Agent instructions — [AGENTS.md](AGENTS.md) (in Russian). Detailed design docs and
+PlantUML diagrams live in the private project monorepo.
