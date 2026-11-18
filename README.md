@@ -115,4 +115,4 @@ PlantUML diagrams live in the private project monorepo.
 
 ## License
 
-Released under the [MIT License](LICENSE).
+Released under the [MIT License](https://github.com/ITcompressor/any-router/blob/main/LICENSE).

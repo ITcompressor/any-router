@@ -116,4 +116,4 @@ go test ./...
 
 ## Лицензия
 
-Проект распространяется под [лицензией MIT](LICENSE).
+Проект распространяется под [лицензией MIT](https://github.com/ITcompressor/any-router/blob/main/LICENSE).
