@@ -11,7 +11,7 @@ var (
 	// Version — версия any-router. Переменная (не константа):
 	// переопределяется -ldflags при сборке; повышать при каждом изменении,
 	// затрагивающем CLI.
-	Version = "v0.2.0"
+	Version = "v0.3.0"
 	// Commit и BuildTime — метаданные сборки (-ldflags при сборке).
 	Commit    = "dev"
 	BuildTime = "unknown"
