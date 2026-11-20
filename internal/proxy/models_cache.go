@@ -73,6 +73,23 @@ func (c *ModelsCache) Start(ctx context.Context) {
 	}()
 }
 
+// Caps — capabilities одной модели provider/short из готового снапшота
+// (без ensureLoaded: холодный кэш не блокирует чтение — known=false,
+// systemone-fallback отработает по ошибке апстрима). Форма ищется:
+// id "provider/short" (алиас или голый), Raw — целевой id бэкенда.
+// known=true с пустыми капами («провайдер список отдал, капы — нет»),
+// известное отсутствие decision — честный ответ для systemone-fallback.
+func (c *ModelsCache) Caps(provider, short string) ([]string, bool) {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+	for _, e := range c.snapshots[provider] {
+		if e.ID == provider+"/"+short || e.Raw == short {
+			return e.Capabilities, true
+		}
+	}
+	return nil, false
+}
+
 // ensureLoaded — первичная полная загрузка ровно один раз: первый вызов
 // запускает цикл обновления, остальные ждут его завершения (sync.Once
 // блокирует до возврата функции). Ленивая загрузка идёт на своём

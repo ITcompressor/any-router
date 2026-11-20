@@ -42,6 +42,7 @@ type Call struct {
 	Model    string // модель, как прислал клиент: provider/model или голое имя алиаса
 	Path     string // путь /v1/...
 	Stream   bool   // stream: true в теле запроса
+	Mode     string // decision-режим /v1/systemone: "api" — нативный Decision API, "chat" — fallback-имитация; "" — прочие маршруты
 	Started  time.Time
 
 	// результат (заполняется по ходу проксирования)

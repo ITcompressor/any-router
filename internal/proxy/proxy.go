@@ -532,6 +532,13 @@ func Chat(w http.ResponseWriter, r *http.Request, res ProviderSource, log *loggi
 		// flavor-конвертеры: строгие апстримы (mistral) 422-ят незнакомые
 		// поля — тело чатится под диалект апстрима (см. flavor.go)
 		sanitizeFlavorRequest(FlavorOf(up.BaseURL), strings.TrimPrefix(r.URL.Path, "/v1"), attemptBody, log)
+		// Decision API (/v1/systemone): decision-модель — прозрачный passthrough
+		// (буферизованно — ответ уже JSON, не SSE); модель без/с неизвестной
+		// капой — fallback-имитация чатом со structured output (decision-mode).
+		// Ответ клиенту — в формате Decision API в обоих случаях (systemone.go).
+		if r.URL.Path == "/v1/systemone" {
+			return systemoneHandle(w, r, up, payload, attemptBody, resolved, c.provider, c.short, res, capd, call, log)
+		}
 		rewritten, err := json.Marshal(attemptBody)
 		if err != nil {
 			if call != nil {

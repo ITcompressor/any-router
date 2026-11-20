@@ -281,6 +281,13 @@ func (s *Server) Upstream(provider string) (proxy.Upstream, bool) {
 
 func (s *Server) ProviderNames() []string { return s.st.ProviderNames() }
 
+// ModelCaps — реализация proxy.ModelCapsSource поверх кэша моделей:
+// capabilities модели для systemone-fallback (без ensureLoaded — холодный
+// кэш читается как unknown, см. proxyModelsCache.Caps).
+func (s *Server) ModelCaps(provider, short string) ([]string, bool) {
+	return s.mc.Caps(provider, short)
+}
+
 // Balance — участники баланс-алиаса (proxy.BalanceSource поверх store;
 // ищет proxy.Chat при голом имени модели без «/»).
 func (s *Server) Balance(name string) ([]string, bool) { return s.st.Balance(name) }
